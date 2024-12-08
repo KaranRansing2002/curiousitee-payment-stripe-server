@@ -39,7 +39,7 @@ app.post("/checkout", async (req, res) => {
     const { products } = req.body;
     //console.log(req.body);
     for (let i = 0; i < products.length; i++) {
-        products[i].image = `http://localhost:8000/image/${products[i].image}`;
+        products[i].image = `https://image-server-ebon.vercel.app/image/${products[i].image}`;
     }
     const lineitems = products.map(product => ({
         price_data: {
