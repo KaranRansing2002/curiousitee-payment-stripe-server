@@ -10,17 +10,21 @@ const allowedOrigins = [
     "https://curiousitee-payment-stripe-server.vercel.app"
 ];
 
-
-app.use(cors({
+const corsOptions = {
     origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
+      // Allow requests with no origin (like Postman or curl)
+      if (allowedOrigins.includes(origin) || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
     },
-    credentials: true, // If you're using cookies or authentication headers
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
+    credentials: true,  // Allow cookies and auth headers
+  };
+
+app.use(cors(corsOptions));
 
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
