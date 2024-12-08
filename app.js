@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 
-const stripe = require("stripe")(process.env.STRIPE_KEY);
+const stripe = require("stripe")("sk_test_51K96NiSE0mSwz2G7GzIWA7TSPd43SDVOh0gH2jyUOsABZnXZcq2Q6MgH71knivUyFFDbCAfmqKjGH9STAhUDt9UW00zqntZ9mJ");
 
 const allowedOrigins = [
     "http://localhost:5173",
@@ -29,12 +29,11 @@ app.use(cors(corsOptions));
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
-console.log(process.env.STRIPE_KEY);
-
 app.get("/", async (req, res) => res.send(`<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`));
 
 app.post("/checkout", async (req, res) => {
-    console.log(process.env.STRIPE_KEY);
+    console.log("env:-",process.env.STRIPE_KEY);
+    console.log("this\n\n","sk_test_51K96NiSE0mSwz2G7GzIWA7TSPd43SDVOh0gH2jyUOsABZnXZcq2Q6MgH71knivUyFFDbCAfmqKjGH9STAhUDt9UW00zqntZ9mJ");
 
     const { products } = req.body;
     //console.log(req.body);
