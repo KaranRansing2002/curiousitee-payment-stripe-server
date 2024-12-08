@@ -5,13 +5,29 @@ require("dotenv").config();
 
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 
-app.use(cors());
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://curiousitee-payment-stripe-server.vercel.app"
+];
+
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true, // If you're using cookies or authentication headers
+}));
+
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 console.log(process.env.STRIPE_KEY);
 
-app.get("/",async(req,res)=>res.send(`<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`));
+app.get("/", async (req, res) => res.send(`<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`));
 
 app.post("/checkout", async (req, res) => {
     const { products } = req.body;
@@ -26,9 +42,9 @@ app.post("/checkout", async (req, res) => {
                 name: product.productName,
                 images: [product.image]
             },
-            unit_amount:Math.round(product.price*100)
+            unit_amount: Math.round(product.price * 100)
         },
-        quantity: product.qty 
+        quantity: product.qty
     }));
 
     const session = await stripe.checkout.sessions.create({
