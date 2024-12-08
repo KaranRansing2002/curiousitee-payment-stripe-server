@@ -36,30 +36,30 @@ app.get("/", async (req, res) => res.send(`<div style="height:100vh;width:100vw;
 app.post("/checkout", async (req, res) => {
     const { products } = req.body;
     console.log(req.body);
-    for (let i = 0; i < products.length; i++) {
-        products[i].image = `http://localhost:8000/image/${products[i].image}`;
-    }
-    const lineitems = products.map(product => ({
-        price_data: {
-            currency: "inr",
-            product_data: {
-                name: product.productName,
-                images: [product.image]
-            },
-            unit_amount: Math.round(product.price * 100)
-        },
-        quantity: product.qty
-    }));
+    // for (let i = 0; i < products.length; i++) {
+    //     products[i].image = `http://localhost:8000/image/${products[i].image}`;
+    // }
+    // const lineitems = products.map(product => ({
+    //     price_data: {
+    //         currency: "inr",
+    //         product_data: {
+    //             name: product.productName,
+    //             images: [product.image]
+    //         },
+    //         unit_amount: Math.round(product.price * 100)
+    //     },
+    //     quantity: product.qty
+    // }));
 
-    const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: lineitems,
-        mode: "payment",
-        success_url: "http://localhost:5173",
-        cancel_url: "http://localhost:5173/product"
-    });
+    // const session = await stripe.checkout.sessions.create({
+    //     payment_method_types: ["card"],
+    //     line_items: lineitems,
+    //     mode: "payment",
+    //     success_url: "http://localhost:5173",
+    //     cancel_url: "http://localhost:5173/product"
+    // });
 
-    res.json({ id: session.id });
+    res.json({ id: 1 });
 });
 
 app.listen(4000, () => {
