@@ -1,12 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const bodyParser = require("body-parser"); // For raw middleware
 require("dotenv").config();
-const bodyParser = require("body-parser"); // Import body-parser for raw middleware
 
-
-const key=process.env.STRIPE_KEY;
-const stripe = require("stripe")(`${key}`);
+const key = process.env.STRIPE_KEY;
+const stripe = require("stripe")(key);
 
 const allowedOrigins = [
     "http://localhost:5173",
@@ -15,33 +14,42 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-      // Allow requests with no origin (like Postman or curl)
-      if (allowedOrigins.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
-    credentials: true,  // Allow cookies and auth headers
-  };
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+};
 
 app.use(cors(corsOptions));
 
-app.use(express.json()); // For parsing application/json
-app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+// Apply JSON parsers to all routes except `/webhook`
+app.use((req, res, next) => {
+    if (req.originalUrl === "/webhook") {
+        next(); // Skip JSON/body parsing for `/webhook`
+    } else {
+        express.json()(req, res, next);
+    }
+});
 
-app.get("/", async (req, res) => res.send(`<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`));
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
+
+app.get("/", async (req, res) =>
+    res.send(
+        `<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`
+    )
+);
 
 app.post("/checkout", async (req, res) => {
-    console.log(process.env.STRIPE_WEBHOOK_SECRET)
     const { products } = req.body;
-    //console.log(req.body);
     for (let i = 0; i < products.length; i++) {
         products[i].image = `https://image-server-ebon.vercel.app/image/${products[i].image}`;
     }
-    const lineitems = products.map(product => ({
+    const lineitems = products.map((product) => ({
         price_data: {
             currency: "inr",
             product_data: {
@@ -66,7 +74,7 @@ app.post("/checkout", async (req, res) => {
 
 app.post(
     "/webhook",
-    bodyParser.raw({ type: "application/json" }), // Parse raw body specifically for webhooks
+    bodyParser.raw({ type: "application/json" }), // Use raw body only for `/webhook`
     (req, res) => {
         const sig = req.headers["stripe-signature"];
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -88,7 +96,6 @@ app.post(
             case "checkout.session.completed":
                 const session = event.data.object;
                 console.log("Payment successful:", session);
-                // Perform additional actions, e.g., update order status in DB
                 break;
 
             case "checkout.session.expired":
@@ -104,5 +111,5 @@ app.post(
 );
 
 app.listen(4000, () => {
-    console.log("payment server started");
+    console.log("Payment server started");
 });
