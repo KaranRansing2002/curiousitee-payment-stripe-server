@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+const bodyParser = require("body-parser"); // Import body-parser for raw middleware
 
 
 const key=process.env.STRIPE_KEY;
@@ -63,42 +64,44 @@ app.post("/checkout", async (req, res) => {
     res.json({ id: session.id });
 });
 
-// Webhook endpoint to handle Stripe events
-app.post("/webhook", (req, res) => {
-    console.log("here");
-    const sig = req.headers["stripe-signature"];
-    const endpointSecret = `${process.env.STRIPE_WEBHOOK_SECRET}`;
+app.post(
+    "/webhook",
+    bodyParser.raw({ type: "application/json" }), // Parse raw body specifically for webhooks
+    (req, res) => {
+        const sig = req.headers["stripe-signature"];
+        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    let event;
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body, // Raw request body
-            sig,
-            endpointSecret
-        );
-    } catch (err) {
-        console.error("Webhook signature verification failed:", err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
+        let event;
+        try {
+            event = stripe.webhooks.constructEvent(
+                req.body, // Use raw body here
+                sig,
+                endpointSecret
+            );
+        } catch (err) {
+            console.error("Webhook signature verification failed:", err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+
+        // Handle the event
+        switch (event.type) {
+            case "checkout.session.completed":
+                const session = event.data.object;
+                console.log("Payment successful:", session);
+                // Perform additional actions, e.g., update order status in DB
+                break;
+
+            case "checkout.session.expired":
+                console.log("Payment session expired");
+                break;
+
+            default:
+                console.log(`Unhandled event type: ${event.type}`);
+        }
+
+        res.status(200).send("Webhook received");
     }
-
-    // Handle the event
-    switch (event.type) {
-        case "checkout.session.completed":
-            const session = event.data.object;
-            console.log("Payment successful:", session);
-            // Perform additional actions, e.g., update order status in DB
-            break;
-
-        case "checkout.session.expired":
-            console.log("Payment session expired");
-            break;
-
-        default:
-            console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    res.status(200).send("Webhook received");
-});
+);
 
 app.listen(4000, () => {
     console.log("payment server started");
