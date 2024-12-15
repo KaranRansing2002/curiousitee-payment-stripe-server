@@ -77,8 +77,8 @@ app.post(
     bodyParser.raw({ type: "application/json" }), // Use raw body only for `/webhook`
     (req, res) => {
         const sig = req.headers["stripe-signature"];
-        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
+        const endpointSecret = `${process.env.STRIPE_WEBHOOK_SECRET}`;
+        console.log(sig,endpointSecret);
         let event;
         try {
             event = stripe.webhooks.constructEvent(
