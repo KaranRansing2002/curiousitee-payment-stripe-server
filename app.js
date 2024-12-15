@@ -74,16 +74,21 @@ app.post("/checkout", async (req, res) => {
 
 app.post(
     "/webhook",
-    bodyParser.raw({ type: "application/json" }), // Use raw body only for `/webhook`
+    bodyParser.raw({ type: "application/json" }), // Ensure the raw body is parsed
     (req, res) => {
         const sig = req.headers["stripe-signature"];
-        const endpointSecret = `${process.env.STRIPE_WEBHOOK_SECRET}`;
-        console.log(sig,endpointSecret);
+        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+        // Log raw body for debugging
+        console.log("Raw Payload:", req.body.toString());
+        console.log("Stripe Signature:", sig);
+
         let event;
         try {
+            // Construct the event with the raw body
             event = stripe.webhooks.constructEvent(
-                req.body, // Use raw body here
-                sig,
+                req.body, // Raw body is passed to this method
+                sig,      // Stripe signature
                 endpointSecret
             );
         } catch (err) {
@@ -97,11 +102,6 @@ app.post(
                 const session = event.data.object;
                 console.log("Payment successful:", session);
                 break;
-
-            case "checkout.session.expired":
-                console.log("Payment session expired");
-                break;
-
             default:
                 console.log(`Unhandled event type: ${event.type}`);
         }
