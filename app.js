@@ -68,7 +68,6 @@ app.post("/checkout", async (req, res) => {
 
 app.post(
     "/webhook",
-    bodyParser.raw({ type: "application/json" }), // Ensure the raw body is parsed
     (req, res) => {
         const sig = req.headers["stripe-signature"];
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
