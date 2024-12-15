@@ -27,7 +27,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use('/api/subs/webhook', express.raw({type: "*/*"}))
+app.use('/webhook', express.raw({type: "*/*"}))
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
