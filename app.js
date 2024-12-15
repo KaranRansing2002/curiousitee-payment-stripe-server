@@ -33,8 +33,6 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 app.get("/", async (req, res) => res.send(`<div style="height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;flex-direction:column;"><h1>Hello there this is stripe-dev-server</h1><img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif"/></div>`));
 
 app.post("/checkout", async (req, res) => {
-    console.log("env:-",key);
-    //console.log("this\n\n","sk_test_51K96NiSE0mSwz2G7GzIWA7TSPd43SDVOh0gH2jyUOsABZnXZcq2Q6MgH71knivUyFFDbCAfmqKjGH9STAhUDt9UW00zqntZ9mJ");
 
     const { products } = req.body;
     //console.log(req.body);
@@ -62,6 +60,43 @@ app.post("/checkout", async (req, res) => {
     });
 
     res.json({ id: session.id });
+});
+
+// Webhook endpoint to handle Stripe events
+app.post("/webhook", (req, res) => {
+    console.log("here");
+    const sig = req.headers["stripe-signature"];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body, // Raw request body
+            sig,
+            endpointSecret
+        );
+    } catch (err) {
+        console.error("Webhook signature verification failed:", err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    switch (event.type) {
+        case "checkout.session.completed":
+            const session = event.data.object;
+            console.log("Payment successful:", session);
+            // Perform additional actions, e.g., update order status in DB
+            break;
+
+        case "checkout.session.expired":
+            console.log("Payment session expired");
+            break;
+
+        default:
+            console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.status(200).send("Webhook received");
 });
 
 app.listen(4000, () => {
