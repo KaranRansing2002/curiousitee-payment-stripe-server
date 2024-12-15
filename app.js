@@ -27,14 +27,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Apply JSON parsers to all routes except `/webhook`
-app.use((req, res, next) => {
-    if (req.originalUrl === "/webhook") {
-        next(); // Skip JSON/body parsing for `/webhook`
-    } else {
-        express.json()(req, res, next);
-    }
-});
+app.use('/api/subs/webhook', express.raw({type: "*/*"}))
+app.use(express.json());
 
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 
