@@ -60,8 +60,8 @@ app.post("/checkout", async (req, res) => {
         payment_method_types: ["card"],
         line_items: lineitems,
         mode: "payment",
-        success_url: "http://localhost:5173",
-        cancel_url: "http://localhost:5173/product"
+        success_url: "https://curositee.vercel.app",
+        cancel_url: "https://curositee.vercel.app/product"
     });
 
     res.json({ id: session.id });
