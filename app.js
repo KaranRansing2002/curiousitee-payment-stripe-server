@@ -8,6 +8,7 @@ const stripe = require("stripe")(`${key}`);
 
 const allowedOrigins = [
     "http://localhost:5173",
+    "https://curositee.vercel.app",
     "https://curiousitee-payment-stripe-server.vercel.app"
 ];
 
